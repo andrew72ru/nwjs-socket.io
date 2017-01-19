@@ -1,0 +1,29 @@
+{
+  "name": "nw-notifier",
+  "version": "0.0.1",
+  "license": "(MIT OR Apache-2.0)",
+  "description": "Shows a notification on websocket event",
+  "dependencies": {
+    "material-design-icons": "^3.0.1",
+    "material-design-lite": "^1.3.0",
+    "socket.io": "^1.7.2",
+    "socket.io-client": "^1.7.2",
+    "winston": "^2.3.0"
+  },
+  "main": "index.html",
+  "window": {
+    "show": false,
+    "show_in_taskbar": true,
+    "resizable": false,
+    "always_on_top": true,
+    "position": null,
+    "frame": false,
+    "x": 50,
+    "y": 0,
+    "width": 400,
+    "height": 100
+  },
+  "devDependencies": {
+    "nw-dev": "^3.0.1"
+  }
+}
