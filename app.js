@@ -6,12 +6,12 @@
  */
 "use strict";
 const DEV = true;
-var window = undefined;
+var currentWindow = undefined;
 
 class devOptions {
 
   constructor() {
-    this.win = new setupWindow();
+    this.win = new setupWindow().win;
   }
 
   devInit() {
@@ -78,11 +78,21 @@ class appMenu {
 
 class socketClient {
 
+  /**
+   * Set up variables:
+   * timeoutId - identifier of timer to hide window
+   * setupClass - class with window functions
+   * win - window
+   */
   constructor() {
     this.timeoutId = undefined;
-    this.win = new setupWindow();
+    this.setupClass = new setupWindow();
+    this.win = this.setupClass.win;
   }
 
+  /**
+   * Connect to websocket
+   */
   connect() {
     var io = require("socket.io-client");
     var socket = io.connect("http://localhost:8080");
@@ -95,6 +105,11 @@ class socketClient {
     this.receive(socket);
   }
 
+  /**
+   * Add listener to socket
+   *
+   * @param socket
+   */
   receive(socket) {
     var selfClass = this;
 
@@ -108,19 +123,21 @@ class socketClient {
     });
   }
 
+  /**
+   * Set values from socket to elements, add there to window and show window
+   *
+   * @param data
+   */
   showElem(data) {
-    this.win.show();
 
     var elem = document.getElementById('logger');
-    // var headerText = document.createTextNode(data.title || "");
-    // var contentText = document.createTextNode(data.message || "Empty message");
-
     var header = document.createElement('h1');
     header.innerHTML = data.header || "";
     var content = document.createElement('p');
     content.innerHTML = data.message || "Empty message";
 
     var selfClass = this;
+    selfClass.win.show();
     if((typeof elem.childNodes.forEach) == 'function') {
 
       elem.childNodes.forEach(function (sub, i) {
@@ -133,12 +150,21 @@ class socketClient {
           textPlace.appendChild(header);
           textPlace.appendChild(content);
 
+          selfClass.setupClass.linksListener();
           selfClass.setupTimeout(textPlace);
         }
       });
     }
   }
 
+  /**
+   * Set up timeout to close window. If timeout already exists, clear it;
+   *
+   * @param node
+   * @param hide
+   * @param time
+   * @returns {number|*}
+   */
   setupTimeout(node, hide = true, time = 15000) {
     var selfClass = this;
 
@@ -160,7 +186,8 @@ class socketClient {
 class setupWindow {
 
   constructor() {
-    var win = nw.Window.get();
+    this.win = nw.Window.get();
+    var win = this.win;
 
     nw.Screen.Init();
 
@@ -171,10 +198,22 @@ class setupWindow {
     win.x = nw.Screen.screens[0].work_area.width - nw.Window.get().width;
     win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
 
-
-
-    return win;
+    return this;
   }
+
+  linksListener() {
+    var selfClass = this;
+    var links = this.win.window.document.getElementsByTagName('a');
+    var linkNames = Object.getOwnPropertyNames(links);
+    linkNames.forEach(function (el, i) {
+      var link = links[i];
+      link.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        console.log(link)
+      });
+    });
+  }
+
 }
 
 // var gui = require('nw.gui');
