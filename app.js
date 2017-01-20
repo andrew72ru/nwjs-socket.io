@@ -6,7 +6,7 @@
  */
 "use strict";
 const DEV = true;
-var currentWindow = undefined;
+const opn = require('opn');
 
 class devOptions {
 
@@ -201,7 +201,11 @@ class setupWindow {
     return this;
   }
 
+  /**
+   * Add EventListener for all links
+   */
   linksListener() {
+
     var selfClass = this;
     var links = this.win.window.document.getElementsByTagName('a');
     var linkNames = Object.getOwnPropertyNames(links);
@@ -209,7 +213,7 @@ class setupWindow {
       var link = links[i];
       link.addEventListener('click', function (ev) {
         ev.preventDefault();
-        console.log(link)
+        opn(link.getAttribute('href'));
       });
     });
   }
