@@ -2,7 +2,23 @@ html, body {
     height: 100%;
 }
 
-.message-body {
+@keyframes bodyOpacity {
+  0% {
+    opacity: 0;
+    background-color: rgba(255, 255, 255, 0);
+  }
+
+  100% {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 1);
+  }
+}
+
+body {
+  background-color: rgba(255, 255, 255, 1);
+  animation: bodyOpacity 2.75s 1;
+
+  .message-body {
     width: 100%;
     height: 100%;
     display: flex;
@@ -10,28 +26,30 @@ html, body {
     align-items: center;
 
     >* {
-        padding: 4px;
+      padding: 4px;
     }
 
     .icon-place {
-        width: 60px;
-        text-align: center;
+      width: 60px;
+      text-align: center;
 
-        i.material-icons {
-            font-size: 56px;
-        }
+      i.material-icons {
+        font-size: 56px;
+      }
     }
 
     .text-place {
-        h1 {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 0;
-        }
+      h1 {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0;
+      }
 
-        p {
-            margin: 0;
-        }
+      p {
+        margin: 0;
+      }
     }
+  }
 }
+
 

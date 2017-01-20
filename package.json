@@ -16,6 +16,7 @@
   "window": {
     "show": false,
     "show_in_taskbar": false,
+    "transparent": true,
     "resizable": false,
     "always_on_top": true,
     "position": null,

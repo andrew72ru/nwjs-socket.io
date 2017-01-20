@@ -8,6 +8,8 @@
 const DEV = true;
 const opn = require('opn');
 
+process.stdout.write("Process on" + `\n`);
+
 class devOptions {
 
   constructor() {
@@ -137,7 +139,8 @@ class socketClient {
     content.innerHTML = data.message || "Empty message";
 
     var selfClass = this;
-    selfClass.win.show();
+    this.setupClass.setVisible();
+    selfClass.setupClass.setVisible();
     if((typeof elem.childNodes.forEach) == 'function') {
 
       elem.childNodes.forEach(function (sub, i) {
@@ -165,7 +168,7 @@ class socketClient {
    * @param time
    * @returns {number|*}
    */
-  setupTimeout(node, hide = true, time = 15000) {
+  setupTimeout(node, hide = true, time = 5000) {
     var selfClass = this;
 
     if(this.timeoutId !== undefined) {
@@ -175,7 +178,7 @@ class socketClient {
     this.timeoutId = selfClass.win.window.setTimeout(function () {
       node.innerHTML = "";
       if(hide) {
-        selfClass.win.hide();
+        selfClass.setupClass.setInvisible();
       }
     }, time);
 
@@ -198,6 +201,12 @@ class setupWindow {
     win.x = nw.Screen.screens[0].work_area.width - nw.Window.get().width;
     win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
 
+    var selfClass = this;
+
+    win.on('close', function (ev) {
+      selfClass.setInvisible();
+    });
+
     return this;
   }
 
@@ -216,6 +225,16 @@ class setupWindow {
         opn(link.getAttribute('href'));
       });
     });
+  }
+
+  setVisible() {
+    var win = this.win;
+    win.show();
+  }
+
+  setInvisible(time = 500) {
+    var win = this.win;
+    win.hide();
   }
 
 }
