@@ -2,18 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="/node_modules/material-design-lite/material.min.css">
-    <script src="/node_modules/material-design-lite/material.min.js"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <script type="text/javascript" src="app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="node_modules/material-design-lite/material.min.css">
+    <link rel="stylesheet" href="node_modules/material-design-icons/iconfont/material-icons.css">
 
+    <link rel="stylesheet/less" type="text/css" href="css/style.less">
+    <script src="node_modules/less/dist/less.min.js"></script>
+
+    <script src="node_modules/material-design-lite/material.min.js"></script>
+    <script src="app.js"></script>
 </head>
 <body>
-<div class="mdl-layout">
-    <div class="mdl-grid">
-        <div class="mdl-cell mdl-cell--4-col">
-            <ul class="mdl-list" id="logger"></ul>
+<div class="message-body" id="logger">
+    <div class="icon-place">
+        <i class="material-icons">phone_in_talk</i>
+    </div>
+    <div class="text-place">
+        <!--
+        <h1>Message header</h1>
+        <p>Message body with unknown text lenght</p>
+        <div class="actions">
+            <a href="#">Link</a>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">Link 1</button>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored">Link 2</button>
         </div>
+        -->
     </div>
 </div>
 </body>

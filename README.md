@@ -104,6 +104,7 @@ composer require wisembly/elephant.io
 - Nwjs - https://nwjs.io
 - Socket.io http://socket.io
 - Material Design Lite – https://getmdl.io
+- Material Design Icons – https://material.io/icons/
 
 and for server side
 
