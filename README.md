@@ -61,7 +61,7 @@ io.on('connection', function (socket){
 server.listen(port);
 ```
 
-To run server just create two files (`package.json` and `app.js`) in any directory, open terminal and type:
+To run server just create two files (`package.json` and `app.js`) in any directory, open terminal, `cd` to you directory and type:
 
 ```shell
 npm install
