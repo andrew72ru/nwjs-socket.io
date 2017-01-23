@@ -264,6 +264,7 @@ class setupWindow {
       this.setShowInTaskbar(true);
       selfClass.checkConnection();
       selfClass.setVariables();
+      selfClass.testNotify();
     });
     this.windowPosition();
 
@@ -281,7 +282,33 @@ class setupWindow {
     return this;
   }
 
+  testNotify() {
+
+    nw.Screen.Init();
+    let testButton = $("#notifyCheck");
+    testButton.on('click', function (e) {
+      let notifyWindow = nw.Window.open('notification.html', {
+        resizable: false,
+        show: false,
+        new_instance: false,
+        id: 'notificationWindow',
+        width: 400,
+        height: 100,
+        show_in_taskbar: true,
+        visible_on_all_workspaces: true,
+        frame: false
+      }, function (win) {
+        win.width = 400;
+        win.height = 100;
+        win.x = nw.Screen.screens[0].work_area.width - win.width;
+        win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
+        win.show();
+      });
+    });
+  }
+
   setVariables() {
+
     let fields = configFactory.fieldList();
     let fieldNames = Object.getOwnPropertyNames(fields);
     fieldNames.forEach(function (el, i) {

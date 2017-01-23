@@ -13,7 +13,7 @@ Application is under development and not working properly, do not use it.
 - [x] tray icon and menu for setup application;
 - [ ] create and style the notification window;
 - [ ] show window by event;
-- [ ] "check notify" button. **DO NOT** send any signals to server, just open window and write text to then;
+- [x] "check notify" button. **DO NOT** send any signals to server, just open window and write text to then;
 
 ## Socket.io server side
 
