@@ -14,17 +14,17 @@
   },
   "main": "index.html",
   "window": {
-    "show": false,
+    "show": true,
     "show_in_taskbar": false,
-    "transparent": true,
-    "resizable": false,
-    "always_on_top": true,
+    "transparent": false,
+    "resizable": true,
+    "always_on_top": false,
     "position": null,
-    "frame": false,
+    "frame": true,
     "x": 50,
     "y": 0,
-    "width": 400,
-    "height": 100
+    "width": 800,
+    "height": 900
   },
   "devDependencies": {
     "nw-dev": "^3.0.1"

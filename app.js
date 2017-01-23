@@ -5,8 +5,15 @@
  *
  */
 "use strict";
-const DEV = true;
+
 const opn = require('opn');
+let DEV = false;
+if((typeof nw.App.fullArgv.forEach) === 'function') {
+  nw.App.fullArgv.forEach(function (elem) {
+    if(elem === '--debug') { DEV = true; }
+  })
+}
+let connected = false;
 
 process.stdout.write("Process on" + `\n`);
 
@@ -14,13 +21,12 @@ class devOptions {
 
   constructor() {
     this.win = new setupWindow().win;
+    this.devInit();
   }
 
   devInit() {
     let win = this.win;
     let selfClass = this;
-
-    win.setShowInTaskbar(true);
 
     win.on('loaded', function () {
       if(win) {
@@ -34,6 +40,7 @@ class devOptions {
         selfClass.windowPositionString();
       }
     });
+
   }
 
   windowPositionString() {
@@ -62,10 +69,13 @@ class devOptions {
   }
 }
 
+/**
+ * Create menus
+ */
 class appMenu {
 
-  tray() {
-    let tray = new nw.Tray({
+  constructor() {
+    this.tray = new nw.Tray({
         icon: 'img/ic_notifications_off_black_24dp/web/ic_notifications_off_black_24dp_1x.png'
     });
     this.trayMenu();
@@ -73,8 +83,26 @@ class appMenu {
 
   trayMenu() {
     let traymenu = new nw.Menu();
-    traymenu.append(new nw.MenuItem({ type: 'checkbox', label: 'box1' }));
-    tray.menu = traymenu;
+
+    let windowShowItem = new nw.MenuItem({
+      type: "normal",
+      label: "Settings",
+      click: function () {
+        new setupWindow().setVisible();
+      }
+    });
+
+    let exitItem = new nw.MenuItem({
+      type: 'normal',
+      label: 'Exit from Notificator',
+      click: function () {
+        nw.App.quit();
+      }
+    });
+
+    traymenu.append(windowShowItem);
+    traymenu.append(exitItem);
+    this.tray.menu = traymenu;
   }
 }
 
@@ -99,10 +127,11 @@ class socketClient {
     let io = require("socket.io-client");
     let socket = io.connect("http://localhost:8080");
     socket.on('connect', function () {
-      if(DEV) {
-        console.log('Socket connected with id ' + socket.id);
-      }
+      connected = true;
+      if(DEV) { console.log('Socket connected with id ' + socket.id); }
     });
+    socket.on('connect_failed', function () {
+    })
 
     this.receive(socket);
   }
@@ -192,22 +221,24 @@ class setupWindow {
     this.win = nw.Window.get();
     let win = this.win;
 
-    nw.Screen.Init();
-
-    if(win.width > nw.Screen.screens[0].work_area.width) {
-      win.width = nw.Screen.screens[0].work_area.width;
-    }
-
-    win.x = nw.Screen.screens[0].work_area.width - nw.Window.get().width;
-    win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
-
     let selfClass = this;
-
     win.on('close', function () {
       selfClass.setInvisible();
+    }).on('loaded', function () {
+      this.setShowInTaskbar(true);
     });
+    this.windowPosition();
 
     return this;
+  }
+
+  windowPosition() {
+    nw.Screen.Init();
+    let win = this.win;
+
+    if(win.width > nw.Screen.screens[0].work_area.width) {
+        win.width = nw.Screen.screens[0].work_area.width;
+    }
   }
 
   /**
@@ -228,11 +259,13 @@ class setupWindow {
 
   setVisible() {
     let win = this.win;
+    win.setShowInTaskbar(true);
     win.show();
   }
 
   setInvisible(time = 500) {
     let win = this.win;
+    win.setShowInTaskbar(false);
     win.hide();
   }
 
@@ -241,9 +274,12 @@ class setupWindow {
 // let gui = require('nw.gui');
 // let menu = new gui.Menu();
 
-if(DEV) { new devOptions().devInit(); }
+if(DEV) { new devOptions(); }
 new socketClient().connect();
+new appMenu();
+new setupWindow();
 
+// /*
 if(DEV) {
   let path = "./";
   let fs = require("fs");
@@ -252,4 +288,4 @@ if(DEV) {
     reloadWatcher.close();
   });
 }
-
+// */

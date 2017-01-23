@@ -13,21 +13,22 @@
     <script src="app.js"></script>
 </head>
 <body>
-<div class="message-body" id="logger">
-    <div class="icon-place">
-        <i class="material-icons">phone_in_talk</i>
-    </div>
-    <div class="text-place">
-        <!--
-        <h1>Message header</h1>
-        <p>Message body with unknown text lenght</p>
-        <div class="actions">
-            <a href="#">Link</a>
-            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">Link 1</button>
-            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored">Link 2</button>
+    <div class="mdl-layout mdl-js-layout">
+        <div class="mdl-grid">
+            <div class="mdl-cell mdl-cell--12-col">
+                <p id="statusField"></p>
+            </div>
+            <div class="mdl-cell mdl-cell--12-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="serverAddress">
+                    <label class="mdl-textfield__label" for="serverAddress">Server Address</label>
+                </div>
+            </div>
         </div>
-        -->
     </div>
-</div>
+    <div class="mdl-js-snackbar mdl-snackbar" id="snackbar-main">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+    </div>
 </body>
 </html>
