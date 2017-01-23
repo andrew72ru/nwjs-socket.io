@@ -17,8 +17,8 @@ class devOptions {
   }
 
   devInit() {
-    var win = this.win;
-    var selfClass = this;
+    let win = this.win;
+    let selfClass = this;
 
     win.setShowInTaskbar(true);
 
@@ -37,14 +37,14 @@ class devOptions {
   }
 
   windowPositionString() {
-    var os = require("os");
-    var elemId = 'size-helper-elemet';
-    var existElement = document.querySelector("#" + elemId);
+    let os = require("os");
+    let elemId = 'size-helper-elemet';
+    let existElement = document.querySelector("#" + elemId);
     if(existElement) {
       document.querySelector("#" + elemId).remove();
     }
 
-    var sizeHelper = document.createElement("div");
+    let sizeHelper = document.createElement("div");
     sizeHelper.setAttribute('id', elemId);
     sizeHelper.style.position = "absolute";
     sizeHelper.style.bottom = "0";
@@ -52,8 +52,8 @@ class devOptions {
     sizeHelper.style.fontSize = "x-small";
     sizeHelper.style.color = "#666";
 
-    var win = this.win;
-    var sizeText = document.createTextNode('x: ' + win.x + ", y: " + win.y + " (" + os.platform() + ")");
+    let win = this.win;
+    let sizeText = document.createTextNode('x: ' + win.x + ", y: " + win.y + " (" + os.platform() + ")");
     sizeHelper.appendChild(sizeText);
     if(document.body) {
       document.body.appendChild(sizeHelper);
@@ -65,14 +65,14 @@ class devOptions {
 class appMenu {
 
   tray() {
-    var tray = new nw.Tray({
-      icon: 'img/ic_notifications_off_black_24dp/web/ic_notifications_off_black_24dp_1x.png'
+    let tray = new nw.Tray({
+        icon: 'img/ic_notifications_off_black_24dp/web/ic_notifications_off_black_24dp_1x.png'
     });
     this.trayMenu();
   }
 
   trayMenu() {
-    var traymenu = new nw.Menu();
+    let traymenu = new nw.Menu();
     traymenu.append(new nw.MenuItem({ type: 'checkbox', label: 'box1' }));
     tray.menu = traymenu;
   }
@@ -96,8 +96,8 @@ class socketClient {
    * Connect to websocket
    */
   connect() {
-    var io = require("socket.io-client");
-    var socket = io.connect("http://localhost:8080");
+    let io = require("socket.io-client");
+    let socket = io.connect("http://localhost:8080");
     socket.on('connect', function () {
       if(DEV) {
         console.log('Socket connected with id ' + socket.id);
@@ -113,11 +113,11 @@ class socketClient {
    * @param socket
    */
   receive(socket) {
-    var selfClass = this;
+    let selfClass = this;
 
     socket.on('marker', function (data) {
       if(DEV) {
-        var d = new Date();
+        let d = new Date();
         console.log('New message received on ' + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds());
         console.log('received data: ' + JSON.stringify(data));
       }
@@ -132,22 +132,22 @@ class socketClient {
    */
   showElem(data) {
 
-    var elem = document.getElementById('logger');
-    var header = document.createElement('h1');
+    let elem = document.getElementById('logger');
+    let header = document.createElement('h1');
     header.innerHTML = data.header || "";
-    var content = document.createElement('p');
+    let content = document.createElement('p');
     content.innerHTML = data.message || "Empty message";
 
-    var selfClass = this;
+    let selfClass = this;
     this.setupClass.setVisible();
     selfClass.setupClass.setVisible();
-    if((typeof elem.childNodes.forEach) == 'function') {
+    if((typeof elem.childNodes.forEach) === 'function') {
 
       elem.childNodes.forEach(function (sub, i) {
 
-        if(elem.childNodes[i].className == 'text-place') {
+        if(elem.childNodes[i].className === 'text-place') {
 
-          var textPlace = elem.childNodes[i];
+          let textPlace = elem.childNodes[i];
           textPlace.innerHTML = "";
 
           textPlace.appendChild(header);
@@ -169,7 +169,7 @@ class socketClient {
    * @returns {number|*}
    */
   setupTimeout(node, hide = true, time = 5000) {
-    var selfClass = this;
+    let selfClass = this;
 
     if(this.timeoutId !== undefined) {
       selfClass.win.window.clearTimeout(this.timeoutId);
@@ -190,7 +190,7 @@ class setupWindow {
 
   constructor() {
     this.win = nw.Window.get();
-    var win = this.win;
+    let win = this.win;
 
     nw.Screen.Init();
 
@@ -201,9 +201,9 @@ class setupWindow {
     win.x = nw.Screen.screens[0].work_area.width - nw.Window.get().width;
     win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
 
-    var selfClass = this;
+    let selfClass = this;
 
-    win.on('close', function (ev) {
+    win.on('close', function () {
       selfClass.setInvisible();
     });
 
@@ -215,11 +215,10 @@ class setupWindow {
    */
   linksListener() {
 
-    var selfClass = this;
-    var links = this.win.window.document.getElementsByTagName('a');
-    var linkNames = Object.getOwnPropertyNames(links);
+    let links = this.win.window.document.getElementsByTagName('a');
+    let linkNames = Object.getOwnPropertyNames(links);
     linkNames.forEach(function (el, i) {
-      var link = links[i];
+      let link = links[i];
       link.addEventListener('click', function (ev) {
         ev.preventDefault();
         opn(link.getAttribute('href'));
@@ -228,27 +227,27 @@ class setupWindow {
   }
 
   setVisible() {
-    var win = this.win;
+    let win = this.win;
     win.show();
   }
 
   setInvisible(time = 500) {
-    var win = this.win;
+    let win = this.win;
     win.hide();
   }
 
 }
 
-// var gui = require('nw.gui');
-// var menu = new gui.Menu();
+// let gui = require('nw.gui');
+// let menu = new gui.Menu();
 
 if(DEV) { new devOptions().devInit(); }
 new socketClient().connect();
 
 if(DEV) {
-  var path = "./";
-  var fs = require("fs");
-  var reloadWatcher=fs.watch(path, function() {
+  let path = "./";
+  let fs = require("fs");
+  let reloadWatcher=fs.watch(path, function() {
     location.reload();
     reloadWatcher.close();
   });
