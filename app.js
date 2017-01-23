@@ -87,20 +87,49 @@ class devOptions {
 class configFactory {
 
   constructor (file = 'config.json') {
-    let fs = require('fs');
-    let path = require('path');
     this.config = configFactory.defaultConfig();
+    let path = require('path');
     this.configFile = nw.App.dataPath + path.sep + file;
     if(fs.existsSync(this.configFile)) {
       this.config = require(this.configFile);
     } else {
-      fs.writeFile(this.configFile, JSON.stringify(this.config), (err) => {
-        if(err) throw err;
-        console.log('file saved to ' + this.configFile);
-      });
+      this.writeFile(this.config);
     }
 
-    return this.config;
+    return this;
+  }
+
+  writeFile(config = {}) {
+    let fs = require('fs');
+    let file = this.configFile;
+    fs.writeFileSync(this.configFile, JSON.stringify(config), (err) => {
+      if(err) throw err;
+      if(DEV) console.log('file saved to ' + this.configFile);
+    });
+
+    return true;
+  }
+
+  saveConfig() {
+    let newConfig = {};
+    let fields = configFactory.fieldList();
+    let fieldNames = Object.getOwnPropertyNames(fields);
+    fieldNames.forEach(function (field) {
+      let target = $("#" + fields[field]);
+      newConfig[field] = target.val();
+    });
+    this.writeFile(newConfig);
+    config = newConfig;
+
+    new setupWindow().checkConnection();
+  }
+
+  static fieldList() {
+    return {
+      protocol: 'serverProrocol',
+      server: 'serverAddress',
+      port: 'serverPort'
+    };
   }
 
   static defaultConfig() {
@@ -112,7 +141,8 @@ class configFactory {
   }
 }
 
-let config = new configFactory();
+let configFactoryClass = new configFactory();
+let config = configFactoryClass.config;
 
 /**
  * Create menus
@@ -252,9 +282,15 @@ class setupWindow {
   }
 
   setVariables() {
-    $("#serverAddress").val(config.server).parents('.mdl-textfield').addClass('is-dirty');
-    $("#serverProrocol").val(config.protocol).parents('.mdl-textfield').addClass('is-dirty');
-    $("#serverPort").val(config.port).parents('.mdl-textfield').addClass('is-dirty');
+    let fields = configFactory.fieldList();
+    let fieldNames = Object.getOwnPropertyNames(fields);
+    fieldNames.forEach(function (el, i) {
+      let target = $("#" + fields[el]);
+      target.val(config[el]).parents('.mdl-textfield').addClass('is-dirty');
+      target.on('change', function () {
+        configFactoryClass.saveConfig();
+      })
+    });
   }
 
   checkConnection() {
