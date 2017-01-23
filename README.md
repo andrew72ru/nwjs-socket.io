@@ -6,11 +6,14 @@ Application is under development and not working properly, do not use it.
 
 ## Roadmap
 
-- Styles for main window;
-- setup window, style it;
-- and save settings in local storage;
-- external config file (for server address, settings, etc.);
-- tray icon and menu for setup application.
+-[x] Styles for main window (main window is a setup window);
+-[x] setup window, style it;
+-[x] and save settings in local storage;
+-[x] external config file (for server address, settings, etc.);
+-[x] tray icon and menu for setup application;
+-[ ] create and style the notification window;
+-[ ] show window by event;
+-[ ] "check notify" button. **DO NOT** send any signals to server, just open window and write text to then;
 
 ## Socket.io server side
 
