@@ -7,6 +7,7 @@
 "use strict";
 
 const opn = require('opn');
+
 let DEV = false;
 if((typeof nw.App.fullArgv.forEach) === 'function') {
   nw.App.fullArgv.forEach(function (elem) {
@@ -116,21 +117,29 @@ class socketClient {
    */
   constructor() {
     this.timeoutId = undefined;
-    this.setupClass = new setupWindow();
-    this.win = this.setupClass.win;
+    return this;
   }
 
   /**
    * Connect to websocket
    */
   connect() {
+    if(DEV) console.log('connection started');
     let io = require("socket.io-client");
     let socket = io.connect("http://localhost:8080");
+    if(DEV) console.log(socket);
+    $('#statusField').html('Checking connection…');
+
     socket.on('connect', function () {
       connected = true;
       if(DEV) { console.log('Socket connected with id ' + socket.id); }
-    });
-    socket.on('connect_failed', function () {
+      $('#statusField').html('Connected to <code>http://localhost:8080</code>');
+    }).on('connect_failed', function () {
+      if(DEV) { console.log('Can\'t connect to http://localhost:8080'); }
+      $('#statusField').html('Cannot connect to <code>http://localhost:8080</code>');
+    }).on('disconnect', function () {
+      if(DEV) { console.log('Disconnected from http://localhost:8080'); }
+      $('#statusField').html('Disconnected from <code>http://localhost:8080</code>');
     })
 
     this.receive(socket);
@@ -150,43 +159,8 @@ class socketClient {
         console.log('New message received on ' + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds());
         console.log('received data: ' + JSON.stringify(data));
       }
-      selfClass.showElem(data);
+      // TODO Show new window with received notification
     });
-  }
-
-  /**
-   * Set values from socket to elements, add there to window and show window
-   *
-   * @param data
-   */
-  showElem(data) {
-
-    let elem = document.getElementById('logger');
-    let header = document.createElement('h1');
-    header.innerHTML = data.header || "";
-    let content = document.createElement('p');
-    content.innerHTML = data.message || "Empty message";
-
-    let selfClass = this;
-    this.setupClass.setVisible();
-    selfClass.setupClass.setVisible();
-    if((typeof elem.childNodes.forEach) === 'function') {
-
-      elem.childNodes.forEach(function (sub, i) {
-
-        if(elem.childNodes[i].className === 'text-place') {
-
-          let textPlace = elem.childNodes[i];
-          textPlace.innerHTML = "";
-
-          textPlace.appendChild(header);
-          textPlace.appendChild(content);
-
-          selfClass.setupClass.linksListener();
-          selfClass.setupTimeout(textPlace);
-        }
-      });
-    }
   }
 
   /**
@@ -228,6 +202,7 @@ class setupWindow {
       this.setShowInTaskbar(true);
     });
     this.windowPosition();
+    this.checkConnection();
 
     return this;
   }
@@ -239,6 +214,14 @@ class setupWindow {
     if(win.width > nw.Screen.screens[0].work_area.width) {
         win.width = nw.Screen.screens[0].work_area.width;
     }
+
+    return this;
+  }
+
+  checkConnection() {
+    this.win.on('loaded', function () {
+      $("#statusField").text('Check connection…');
+    })
   }
 
   /**
@@ -275,7 +258,7 @@ class setupWindow {
 // let menu = new gui.Menu();
 
 if(DEV) { new devOptions(); }
-new socketClient().connect();
+
 new appMenu();
 new setupWindow();
 
