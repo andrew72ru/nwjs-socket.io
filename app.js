@@ -4,9 +4,27 @@
  * @link https://github.com/nwjs/nw.js
  *
  */
-"use strict";
+'use strict';
 
 const opn = require('opn');
+let fs = require('fs');
+let config = {};
+let configFile = nw.App.dataPath + '/config.json';
+let mainWindow = nw.Window.get();
+
+if(fs.existsSync(configFile)) {
+  config = require(configFile);
+} else {
+  config = {
+    protocol: 'http',
+    server: 'localhost',
+    port: '8080',
+  }
+  fs.writeFile(configFile, JSON.stringify(config), (err) => {
+    if(err) throw err;
+    console.log('file saved to ' + configFile);
+  });
+}
 
 let DEV = false;
 if((typeof nw.App.fullArgv.forEach) === 'function') {
@@ -16,7 +34,20 @@ if((typeof nw.App.fullArgv.forEach) === 'function') {
 }
 let connected = false;
 
-process.stdout.write("Process on" + `\n`);
+process.stdout.write('Process on' + `\n`);
+
+process.on('exit', function () {
+  process.stdout.write('Process exit event' + `\n`);
+});
+process.on('SIGINT', function () {
+  process.stdout.write('Process SIGINT event' + `\n`);
+});
+process.on('SIGTERM', function () {
+  process.stdout.write('Process SIGTERM event' + `\n`);
+});
+process.on('SIGHUP', function () {
+  process.stdout.write('Process SIGHUP event' + `\n`);
+});
 
 class devOptions {
 
@@ -31,7 +62,7 @@ class devOptions {
 
     win.on('loaded', function () {
       if(win) {
-        win.showDevTools();
+        // win.showDevTools();
         selfClass.windowPositionString();
       }
     });
@@ -45,23 +76,23 @@ class devOptions {
   }
 
   windowPositionString() {
-    let os = require("os");
+    let os = require('os');
     let elemId = 'size-helper-elemet';
-    let existElement = document.querySelector("#" + elemId);
+    let existElement = document.querySelector('#' + elemId);
     if(existElement) {
-      document.querySelector("#" + elemId).remove();
+      document.querySelector('#' + elemId).remove();
     }
 
-    let sizeHelper = document.createElement("div");
+    let sizeHelper = document.createElement('div');
     sizeHelper.setAttribute('id', elemId);
-    sizeHelper.style.position = "absolute";
-    sizeHelper.style.bottom = "0";
-    sizeHelper.style.right = "0";
-    sizeHelper.style.fontSize = "x-small";
-    sizeHelper.style.color = "#666";
+    sizeHelper.style.position = 'absolute';
+    sizeHelper.style.bottom = '0';
+    sizeHelper.style.right = '0';
+    sizeHelper.style.fontSize = 'x-small';
+    sizeHelper.style.color = '#666';
 
     let win = this.win;
-    let sizeText = document.createTextNode('x: ' + win.x + ", y: " + win.y + " (" + os.platform() + ")");
+    let sizeText = document.createTextNode('x: ' + win.x + ', y: ' + win.y + ' (' + os.platform() + ')');
     sizeHelper.appendChild(sizeText);
     if(document.body) {
       document.body.appendChild(sizeHelper);
@@ -125,22 +156,9 @@ class socketClient {
    */
   connect() {
     if(DEV) console.log('connection started');
-    let io = require("socket.io-client");
-    let socket = io.connect("http://localhost:8080");
-    if(DEV) console.log(socket);
-    $('#statusField').html('Checking connection…');
-
-    socket.on('connect', function () {
-      connected = true;
-      if(DEV) { console.log('Socket connected with id ' + socket.id); }
-      $('#statusField').html('Connected to <code>http://localhost:8080</code>');
-    }).on('connect_failed', function () {
-      if(DEV) { console.log('Can\'t connect to http://localhost:8080'); }
-      $('#statusField').html('Cannot connect to <code>http://localhost:8080</code>');
-    }).on('disconnect', function () {
-      if(DEV) { console.log('Disconnected from http://localhost:8080'); }
-      $('#statusField').html('Disconnected from <code>http://localhost:8080</code>');
-    })
+    let io = require('socket.io-client');
+    let address = config.protocol + "://" + config.server + ':' + config.port;
+    let socket = io.connect(address);
 
     this.receive(socket);
   }
@@ -156,7 +174,7 @@ class socketClient {
     socket.on('marker', function (data) {
       if(DEV) {
         let d = new Date();
-        console.log('New message received on ' + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds());
+        console.log('New message received on ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds());
         console.log('received data: ' + JSON.stringify(data));
       }
       // TODO Show new window with received notification
@@ -179,7 +197,7 @@ class socketClient {
     }
 
     this.timeoutId = selfClass.win.window.setTimeout(function () {
-      node.innerHTML = "";
+      node.innerHTML = '';
       if(hide) {
         selfClass.setupClass.setInvisible();
       }
@@ -192,7 +210,7 @@ class socketClient {
 class setupWindow {
 
   constructor() {
-    this.win = nw.Window.get();
+    this.win = mainWindow;
     let win = this.win;
 
     let selfClass = this;
@@ -220,7 +238,21 @@ class setupWindow {
 
   checkConnection() {
     this.win.on('loaded', function () {
-      $("#statusField").text('Check connection…');
+      let statusField = $('#statusField');
+      let address = config.protocol + "://" + config.server + ':' + config.port;
+      statusField.text('Socket on ' + address + ' disconnected').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
+
+      let io = require('socket.io-client');
+      let socket = io.connect(address);
+
+      socket.on('connect', function () {
+        statusField.text('Socket on ' + address + ' connected').removeClass('mdl-color-text--red').addClass('mdl-color-text--green');
+      }).on('connect_failed', function () {
+        statusField.text('Failed to connect socket on ' + address + '').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
+      }).on('disconnect', function () {
+        statusField.text('Disconnected from socket on ' + address + '').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
+      });
+      socket.disconnect();
     })
   }
 
@@ -262,10 +294,10 @@ if(DEV) { new devOptions(); }
 new appMenu();
 new setupWindow();
 
-// /*
+/*
 if(DEV) {
-  let path = "./";
-  let fs = require("fs");
+  let path = './';
+  let fs = require('fs');
   let reloadWatcher=fs.watch(path, function() {
     location.reload();
     reloadWatcher.close();
