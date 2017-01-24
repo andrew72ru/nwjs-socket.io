@@ -11,6 +11,7 @@
     "opn": "^4.0.2",
     "socket.io": "^1.7.2",
     "socket.io-client": "^1.7.2",
+    "socketio-wildcard": "^0.3.0",
     "winston": "^2.3.0"
   },
   "main": "index.html",

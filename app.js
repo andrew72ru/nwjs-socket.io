@@ -17,7 +17,6 @@ if((typeof nw.App.fullArgv.forEach) === 'function') {
     if(elem === '--debug') { DEV = true; }
   })
 }
-let connected = false;
 
 class setupWindow {
 
@@ -60,9 +59,9 @@ class setupWindow {
 
     let fields = configFactory.fieldList();
     let fieldNames = Object.getOwnPropertyNames(fields);
-    fieldNames.forEach(function (el, i) {
+    fieldNames.forEach(function (el) {
       let target = $("#" + fields[el]);
-      target.val(config[el]).parents('.mdl-textfield').addClass('is-dirty');
+      target.val(config[el]).parents('.mdl-textfield').addClass('is-dirty').attr('required', 1);
       target.on('change', function () {
         configFactoryClass.saveConfig();
       })
@@ -93,7 +92,7 @@ class setupWindow {
     win.show();
   }
 
-  setInvisible(time = 500) {
+  setInvisible() {
     let win = this.win;
     win.setShowInTaskbar(false);
     win.hide();
@@ -296,13 +295,28 @@ class socketClient {
    * Connect to websocket
    */
   connect() {
-    if(DEV) console.log('connection started');
+    if(DEV) process.stdout.write(`Connection started\n`);
     let io = require('socket.io-client');
+
     let address = config.protocol + "://" + config.server + ':' + config.port;
     let socket = io.connect(address);
-    socket.on('connect', function () {
+    let patch = require('socketio-wildcard')(io.Manager);
+    patch(socket);
+
+    socket.on('*', function (e) {
+      process.stdout.write('* event JSON: ' + JSON.stringify(e) + `\n`);
+    }).on('connect', function () {
+      if(DEV) process.stdout.write(`Socket connected to ` + address + `\n`);
       systemTray.icon = 'img/ic_notifications_black_24dp/web/ic_notifications_black_24dp_1x.png'
-    })
+
+    }).on('connect_failed', function () {
+      if(DEV) process.stdout.write(`Connection to ` + address + ` failed\n`);
+      systemTray.icon = 'img/ic_notifications_off_black_24dp/web/ic_notifications_off_black_24dp_1x.png'
+
+    }).on('disconnect', function () {
+      if(DEV) process.stdout.write(`Disconnect from ` + address + ` \n`);
+      systemTray.icon = 'img/ic_notifications_off_black_24dp/web/ic_notifications_off_black_24dp_1x.png'
+    });
 
     this.receive(socket);
   }
@@ -313,41 +327,13 @@ class socketClient {
    * @param socket
    */
   receive(socket) {
-    let selfClass = this;
-
     socket.on('marker', function (data) {
       if(DEV) {
         let d = new Date();
-        console.log('New message received on ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds());
-        console.log('received data: ' + JSON.stringify(data));
+        process.stdout.write('New message received on ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ": " + JSON.stringify(data) + `\n`);
       }
-      new notifyWindowGenerator(data.icon || false, data.header || "Notify from " + config.server, data.message || "(empty)", data.timeout || 1500)
+      new notifyWindowGenerator(data.icon || false, data.header || "Notify from " + config.server, data.message || "(empty)", data.timeout || 15000)
     });
-  }
-
-  /**
-   * Set up timeout to close window. If timeout already exists, clear it;
-   *
-   * @param node
-   * @param hide
-   * @param time
-   * @returns {number|*}
-   */
-  setupTimeout(node, hide = true, time = 5000) {
-    let selfClass = this;
-
-    if(this.timeoutId !== undefined) {
-      selfClass.win.window.clearTimeout(this.timeoutId);
-    }
-
-    this.timeoutId = selfClass.win.window.setTimeout(function () {
-      node.innerHTML = '';
-      if(hide) {
-        selfClass.setupClass.setInvisible();
-      }
-    }, time);
-
-    return this.timeoutId;
   }
 }
 
@@ -356,12 +342,15 @@ if(DEV) { new devOptions(); }
 new setupWindow();
 new socketClient();
 
+let existNotificationWindow = false;
+
 /**
  * Generate notification window
  */
 class notifyWindowGenerator {
 
   constructor (icon = false, title = 'Notify Title', text = 'Notification text', timeout = 15000) {
+
     nw.Screen.Init();
     nw.Window.open('notification.html', {
       resizable: false,
@@ -370,18 +359,23 @@ class notifyWindowGenerator {
       id: 'notificationWindow',
       width: 400,
       height: 100,
-      show_in_taskbar: true,
+      show_in_taskbar: false,
       visible_on_all_workspaces: true,
       frame: false,
-      toolbar: false
     }, function (win) {
       win.width = 400;
       win.height = 100;
       win.x = nw.Screen.screens[0].work_area.width - win.width;
       win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
+      win.setAlwaysOnTop(true);
+
+      existNotificationWindow = win;
+      if(DEV) process.stdout.write('this.existWindow: ' + JSON.stringify(existNotificationWindow) + `\n`);
+
       win.show();
 
       win.on('loaded', function () {
+
         if(parseInt(timeout) > 0) {
           win.window.setTimeout(function () {
             win.window.close();
@@ -400,7 +394,6 @@ class notifyGenerator {
 
   constructor (window, icon = false, title, text) {
     let domWindow = window.window;
-    let console = domWindow.console;
     let $ = domWindow.$;
 
     let messageBody = $(".message-body");
