@@ -50,7 +50,7 @@ class setupWindow {
   }
 
   testNotify() {
-    $("#notifyCheck").on('click', function () {
+    $('#notifyCheck').on('click', function () {
       new notifyWindowGenerator('notifications_active', 'Notification title', `Here is a text with <a href="https://google.com">link</a>`)
     });
   }
@@ -60,7 +60,7 @@ class setupWindow {
     let fields = configFactory.fieldList();
     let fieldNames = Object.getOwnPropertyNames(fields);
     fieldNames.forEach(function (el) {
-      let target = $("#" + fields[el]);
+      let target = $('#' + fields[el]);
       target.val(config[el]).parents('.mdl-textfield').addClass('is-dirty').attr('required', 1);
       target.on('change', function () {
         configFactoryClass.saveConfig();
@@ -70,7 +70,7 @@ class setupWindow {
 
   checkConnection() {
     let statusField = $('#statusField');
-    let address = config.protocol + "://" + config.server + ':' + config.port;
+    let address = config.protocol + '://' + config.server + ':' + config.port;
     statusField.text('Socket on ' + address + ' disconnected').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
 
     let socket = require('socket.io-client')(address);
@@ -197,7 +197,7 @@ class configFactory {
     let fields = configFactory.fieldList();
     let fieldNames = Object.getOwnPropertyNames(fields);
     fieldNames.forEach(function (field) {
-      let target = $("#" + fields[field]);
+      let target = $('#' + fields[field]);
       newConfig[field] = target.val();
     });
     this.writeFile(newConfig);
@@ -242,16 +242,16 @@ class appMenu {
     let traymenu = new nw.Menu();
 
     let windowShowItem = new nw.MenuItem({
-      type: "normal",
-      label: "Settings",
+      type: 'normal',
+      label: 'Settings',
       click: function () {
         new setupWindow().setVisible();
       }
     });
 
     let testNotify = new nw.MenuItem({
-      type: "normal",
-      label: "Test notification",
+      type: 'normal',
+      label: 'Test notification',
       click: function () {
         new notifyWindowGenerator();
       }
@@ -265,7 +265,7 @@ class appMenu {
       }
     });
 
-    traymenu.append(new nw.MenuItem({ type: 'normal', label: "NOTIFIER MENU", enabled: false }));
+    traymenu.append(new nw.MenuItem({ type: 'normal', label: 'NOTIFIER MENU', enabled: false }));
     traymenu.append(new nw.MenuItem({ type: 'separator' }));
     traymenu.append(windowShowItem);
     traymenu.append(testNotify);
@@ -297,7 +297,7 @@ class socketClient {
     if(DEV) process.stdout.write(`Connection started\n`);
     let io = require('socket.io-client');
 
-    let address = config.protocol + "://" + config.server + ':' + config.port;
+    let address = config.protocol + '://' + config.server + ':' + config.port;
     let socket = io.connect(address);
     let patch = require('socketio-wildcard')(io.Manager);
     patch(socket);
@@ -329,9 +329,9 @@ class socketClient {
     socket.on('marker', function (data) {
       if(DEV) {
         let d = new Date();
-        process.stdout.write('New message received on ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ": " + JSON.stringify(data) + `\n`);
+        process.stdout.write('New message received on ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ': ' + JSON.stringify(data) + `\n`);
       }
-      new notifyWindowGenerator(data.icon || false, data.header || "Notify from " + config.server, data.message || "(empty)", data.timeout || 15000)
+      new notifyWindowGenerator(data.icon || false, data.header || 'Notify from ' + config.server, data.message || '(empty)', data.timeout || 15000)
     });
   }
 }
@@ -406,11 +406,11 @@ class notifyGenerator {
     let domWindow = window.window;
     let $ = domWindow.$;
 
-    let messageBody = $(".message-body");
+    let messageBody = $('.message-body');
     if(icon) {
       messageBody.find('.icon-place #notify-icon').text(icon);
     }
-    messageBody.find('.text-place').html("<h1>" + title + "</h1><p>" + text + "</p>");
+    messageBody.find('.text-place').html('<h1>' + title + '</h1><p>' + text + '</p>');
     messageBody.find('a').on('click', function (e) {
       e.preventDefault();
       let link = this;
@@ -418,6 +418,31 @@ class notifyGenerator {
     })
   }
 }
+
+class wrapperWindow {
+  constructor () {
+
+    nw.Screen.Init()
+    nw.Window.open('wrapper.html', {
+      frame: false,
+      transparent: true,
+      height: nw.Screen.screens[0].work_area.height,
+      width: 400,
+      y: 0,
+      x: nw.Screen.screens[0].work_area.width - 400,
+      resizable: false,
+      always_on_top: true,
+    }, function (win) {
+      win.show();
+
+      win.on('loaded', function () {
+        win.window.$('body').append('<div style="background: #fff; padding: 1em;">HELLO</div>')
+      })
+    });
+  }
+}
+
+new wrapperWindow();
 
 /*
  if(DEV) {
