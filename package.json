@@ -15,7 +15,7 @@
   },
   "main": "index.html",
   "window": {
-    "show": true,
+    "show": false,
     "show_in_taskbar": false,
     "transparent": false,
     "resizable": true,

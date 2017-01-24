@@ -94,6 +94,7 @@ class configFactory {
       this.config = require(this.configFile);
     } else {
       this.writeFile(this.config);
+      new setupWindow().setVisible();
     }
 
     return this;
@@ -167,6 +168,14 @@ class appMenu {
       }
     });
 
+    let testNotify = new nw.MenuItem({
+      type: "normal",
+      label: "Test notification",
+      click: function () {
+        new notifyWindowGenerator();
+      }
+    });
+
     let exitItem = new nw.MenuItem({
       type: 'normal',
       label: 'Exit from Notificator',
@@ -176,6 +185,7 @@ class appMenu {
     });
 
     traymenu.append(windowShowItem);
+    traymenu.append(testNotify);
     traymenu.append(exitItem);
     this.tray.menu = traymenu;
   }
@@ -261,7 +271,6 @@ class setupWindow {
     win.on('close', function () {
       selfClass.setInvisible();
     }).on('loaded', function () {
-      this.setShowInTaskbar(true);
       selfClass.checkConnection();
       selfClass.setVariables();
       selfClass.testNotify();
@@ -283,11 +292,15 @@ class setupWindow {
   }
 
   testNotify() {
+    $("#notifyCheck").on('click', function () {
+      new notifyWindowGenerator('notifications_active', 'Notification title', `Here is a text with <a href="https://google.com">link</a>`)
+    });
 
+    /*
     nw.Screen.Init();
     let testButton = $("#notifyCheck");
     testButton.on('click', function (e) {
-      let notifyWindow = nw.Window.open('notification.html', {
+      nw.Window.open('notification.html', {
         resizable: false,
         show: false,
         new_instance: false,
@@ -303,8 +316,16 @@ class setupWindow {
         win.x = nw.Screen.screens[0].work_area.width - win.width;
         win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
         win.show();
+
+        win.on('loaded', function () {
+          win.window.setTimeout(function () {
+            win.window.close();
+          }, 15000);
+          new notifyGenerator(win, 'notifications_active', 'Here is a title', `Here is a text with <a href="https://google.com">link</a>`);
+        });
       });
     });
+    */
   }
 
   setVariables() {
@@ -366,6 +387,64 @@ class setupWindow {
     win.hide();
   }
 
+}
+
+/**
+ * Generate notification window
+ */
+class notifyWindowGenerator {
+
+  constructor (icon = false, title = 'Notify Title', text = 'Notification text', timeout = 15000) {
+    nw.Screen.Init();
+    nw.Window.open('notification.html', {
+      resizable: false,
+      show: false,
+      new_instance: false,
+      id: 'notificationWindow',
+      width: 400,
+      height: 100,
+      show_in_taskbar: true,
+      visible_on_all_workspaces: true,
+      frame: false
+    }, function (win) {
+      win.width = 400;
+      win.height = 100;
+      win.x = nw.Screen.screens[0].work_area.width - win.width;
+      win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
+      win.show();
+
+      win.on('loaded', function () {
+        win.window.setTimeout(function () {
+          win.window.close();
+        }, timeout);
+        new notifyGenerator(win, icon, title, text);
+      });
+    });
+  }
+}
+
+/**
+ * Generate a Html elements for notification window
+ */
+class notifyGenerator {
+
+  /**
+   * @param window
+   * @param icon
+   * @param title
+   * @param text
+   */
+  constructor (window, icon = false, title, text) {
+    let domWindow = window.window;
+    let console = domWindow.console;
+    let $ = domWindow.$;
+
+    let messageBody = $(".message-body");
+    if(icon) {
+      messageBody.find('.icon-place #notify-icon').text(icon);
+    }
+    messageBody.find('.text-place').html("<h1>" + title + "</h1><p>" + text + "</p>");
+  }
 }
 
 if(DEV) { new devOptions(); }

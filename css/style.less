@@ -24,7 +24,25 @@ body {
     width: 100%;
   }
 
-  .message-body {
+  .notification-close-icon {
+    font-size: 12px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    border-radius: 50%;
+    border: solid 1px #ccc;
+    height: 18px;
+    width: 18px;
+    min-width: 18px;
+    cursor: pointer;
+
+    i.material-icons {
+      color: #ccc;
+      font-size: 14px;
+    }
+  }
+
+  .message-body, .message-wrapper {
     width: 100%;
     height: 100%;
     display: flex;
@@ -33,24 +51,6 @@ body {
 
     >* {
       padding: 4px;
-    }
-
-    .notification-close-icon {
-      font-size: 12px;
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      border-radius: 50%;
-      border: solid 1px #ccc;
-      height: 18px;
-      width: 18px;
-      min-width: 18px;
-      cursor: pointer;
-
-      i.material-icons {
-        color: #ccc;
-        font-size: 14px;
-      }
     }
 
     .icon-place {
