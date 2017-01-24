@@ -357,8 +357,9 @@ class notifyWindowGenerator {
       new_instance: false,
       width: 400,
       height: 100,
-      show_in_taskbar: false,
+      show_in_taskbar: true,
       visible_on_all_workspaces: true,
+      transparent: false,
       frame: false,
     }, function (win) {
       win.width = 400;
@@ -367,11 +368,9 @@ class notifyWindowGenerator {
       win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
       win.setAlwaysOnTop(true);
 
-      win.show();
+      notifyWindowGenerator.open(win);
 
       win.on('loaded', function () {
-
-        if(DEV) process.stdout.write(JSON.stringify(existNotificationWindow.hasOwnProperty('window')) + `\n`);
 
         if((typeof existNotificationWindow.window) !== 'undefined') {
           win.y = existNotificationWindow.y + existNotificationWindow.height + 20;
@@ -380,13 +379,21 @@ class notifyWindowGenerator {
 
         if(parseInt(timeout) > 0) {
           existNotificationWindow.window.setTimeout(function () {
-            win.window.close();
+            notifyWindowGenerator.close(win);
             existNotificationWindow = false;
           }, parseInt(timeout));
         }
         new notifyGenerator(win, icon, title, text);
       });
     });
+  }
+
+  static open(window) {
+    window.show();
+  }
+
+  static close(window) {
+    window.window.close();
   }
 }
 
