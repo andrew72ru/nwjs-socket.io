@@ -11,9 +11,12 @@ Application is under development and not working properly, do not use it.
 - [x] and save settings in local storage;
 - [x] external config file (for server address, settings, etc.);
 - [x] tray icon and menu for setup application;
-- [ ] create and style the notification window;
-- [ ] show window by event;
+- [x] create and style the notification window;
+- [x] show window by event;
 - [x] "check notify" button. **DO NOT** send any signals to server, just open window and write text to then;
+- [ ] in application settings need a fields to message, title and icon for test notification, and there will be showing with fields values;
+- [ ] event types in settings (m.b. in advanced settings?) and subscribe to this events in socket;
+- [ ] i18n (how?)
 
 ## Socket.io server side
 
