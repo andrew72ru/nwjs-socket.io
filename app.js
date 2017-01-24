@@ -286,7 +286,6 @@ class socketClient {
    * win - window
    */
   constructor() {
-    this.timeoutId = undefined;
     this.connect();
     return this;
   }
@@ -356,7 +355,6 @@ class notifyWindowGenerator {
       resizable: false,
       show: false,
       new_instance: false,
-      id: 'notificationWindow',
       width: 400,
       height: 100,
       show_in_taskbar: false,
@@ -369,16 +367,21 @@ class notifyWindowGenerator {
       win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
       win.setAlwaysOnTop(true);
 
-      existNotificationWindow = win;
-      if(DEV) process.stdout.write('this.existWindow: ' + JSON.stringify(existNotificationWindow) + `\n`);
-
       win.show();
 
       win.on('loaded', function () {
 
+        if(DEV) process.stdout.write(JSON.stringify(existNotificationWindow.hasOwnProperty('window')) + `\n`);
+
+        if((typeof existNotificationWindow.window) !== 'undefined') {
+          win.y = existNotificationWindow.y + existNotificationWindow.height + 20;
+        }
+        existNotificationWindow = win;
+
         if(parseInt(timeout) > 0) {
-          win.window.setTimeout(function () {
+          existNotificationWindow.window.setTimeout(function () {
             win.window.close();
+            existNotificationWindow = false;
           }, parseInt(timeout));
         }
         new notifyGenerator(win, icon, title, text);
