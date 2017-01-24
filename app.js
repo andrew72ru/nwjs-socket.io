@@ -19,6 +19,88 @@ if((typeof nw.App.fullArgv.forEach) === 'function') {
 }
 let connected = false;
 
+class setupWindow {
+
+  constructor() {
+    this.win = mainWindow;
+    let win = this.win;
+
+    let selfClass = this;
+
+    win.on('close', function () {
+      selfClass.setInvisible();
+    }).on('loaded', function () {
+      selfClass.checkConnection();
+      selfClass.setVariables();
+      selfClass.testNotify();
+    });
+    this.windowPosition();
+
+    return this;
+  }
+
+  windowPosition() {
+    nw.Screen.Init();
+    let win = this.win;
+
+    if(win.width > nw.Screen.screens[0].work_area.width) {
+      win.width = nw.Screen.screens[0].work_area.width;
+    }
+
+    return this;
+  }
+
+  testNotify() {
+    $("#notifyCheck").on('click', function () {
+      new notifyWindowGenerator('notifications_active', 'Notification title', `Here is a text with <a href="https://google.com">link</a>`)
+    });
+  }
+
+  setVariables() {
+
+    let fields = configFactory.fieldList();
+    let fieldNames = Object.getOwnPropertyNames(fields);
+    fieldNames.forEach(function (el, i) {
+      let target = $("#" + fields[el]);
+      target.val(config[el]).parents('.mdl-textfield').addClass('is-dirty');
+      target.on('change', function () {
+        configFactoryClass.saveConfig();
+      })
+    });
+  }
+
+  checkConnection() {
+    let statusField = $('#statusField');
+    let address = config.protocol + "://" + config.server + ':' + config.port;
+    statusField.text('Socket on ' + address + ' disconnected').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
+
+    let socket = require('socket.io-client')(address);
+
+    socket.on('connect', function () {
+      statusField.text('Socket on ' + address + ' connected').removeClass('mdl-color-text--red').addClass('mdl-color-text--green');
+    }).on('connect_failed', function () {
+      statusField.text('Failed to connect socket on ' + address + '').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
+    }).on('disconnect', function () {
+      statusField.text('Disconnected from socket on ' + address + '').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
+    }).on('event', function (data) {
+      console.log(data);
+    });
+  }
+
+  setVisible() {
+    let win = this.win;
+    win.setShowInTaskbar(true);
+    win.show();
+  }
+
+  setInvisible(time = 500) {
+    let win = this.win;
+    win.setShowInTaskbar(false);
+    win.hide();
+  }
+
+}
+
 class devOptions {
 
   constructor() {
@@ -178,18 +260,23 @@ class appMenu {
 
     let exitItem = new nw.MenuItem({
       type: 'normal',
-      label: 'Exit from Notificator',
+      label: 'Quit from Notifier',
       click: function () {
         nw.App.quit();
       }
     });
 
+    traymenu.append(new nw.MenuItem({ type: 'normal', label: "NOTIFIER MENU", enabled: false }));
+    traymenu.append(new nw.MenuItem({ type: 'separator' }));
     traymenu.append(windowShowItem);
     traymenu.append(testNotify);
+    traymenu.append(new nw.MenuItem({ type: 'separator' }));
     traymenu.append(exitItem);
     this.tray.menu = traymenu;
   }
 }
+
+let systemTray = new appMenu().tray;
 
 class socketClient {
 
@@ -201,6 +288,7 @@ class socketClient {
    */
   constructor() {
     this.timeoutId = undefined;
+    this.connect();
     return this;
   }
 
@@ -212,6 +300,9 @@ class socketClient {
     let io = require('socket.io-client');
     let address = config.protocol + "://" + config.server + ':' + config.port;
     let socket = io.connect(address);
+    socket.on('connect', function () {
+      systemTray.icon = 'img/ic_notifications_black_24dp/web/ic_notifications_black_24dp_1x.png'
+    })
 
     this.receive(socket);
   }
@@ -230,7 +321,7 @@ class socketClient {
         console.log('New message received on ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds());
         console.log('received data: ' + JSON.stringify(data));
       }
-      // TODO Show new window with received notification
+      new notifyWindowGenerator(data.icon || false, data.header || "Notify from " + config.server, data.message || "(empty)", data.timeout || 1500)
     });
   }
 
@@ -260,134 +351,10 @@ class socketClient {
   }
 }
 
-class setupWindow {
+if(DEV) { new devOptions(); }
 
-  constructor() {
-    this.win = mainWindow;
-    let win = this.win;
-
-    let selfClass = this;
-
-    win.on('close', function () {
-      selfClass.setInvisible();
-    }).on('loaded', function () {
-      selfClass.checkConnection();
-      selfClass.setVariables();
-      selfClass.testNotify();
-    });
-    this.windowPosition();
-
-    return this;
-  }
-
-  windowPosition() {
-    nw.Screen.Init();
-    let win = this.win;
-
-    if(win.width > nw.Screen.screens[0].work_area.width) {
-      win.width = nw.Screen.screens[0].work_area.width;
-    }
-
-    return this;
-  }
-
-  testNotify() {
-    $("#notifyCheck").on('click', function () {
-      new notifyWindowGenerator('notifications_active', 'Notification title', `Here is a text with <a href="https://google.com">link</a>`)
-    });
-
-    /*
-    nw.Screen.Init();
-    let testButton = $("#notifyCheck");
-    testButton.on('click', function (e) {
-      nw.Window.open('notification.html', {
-        resizable: false,
-        show: false,
-        new_instance: false,
-        id: 'notificationWindow',
-        width: 400,
-        height: 100,
-        show_in_taskbar: true,
-        visible_on_all_workspaces: true,
-        frame: false
-      }, function (win) {
-        win.width = 400;
-        win.height = 100;
-        win.x = nw.Screen.screens[0].work_area.width - win.width;
-        win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
-        win.show();
-
-        win.on('loaded', function () {
-          win.window.setTimeout(function () {
-            win.window.close();
-          }, 15000);
-          new notifyGenerator(win, 'notifications_active', 'Here is a title', `Here is a text with <a href="https://google.com">link</a>`);
-        });
-      });
-    });
-    */
-  }
-
-  setVariables() {
-
-    let fields = configFactory.fieldList();
-    let fieldNames = Object.getOwnPropertyNames(fields);
-    fieldNames.forEach(function (el, i) {
-      let target = $("#" + fields[el]);
-      target.val(config[el]).parents('.mdl-textfield').addClass('is-dirty');
-      target.on('change', function () {
-        configFactoryClass.saveConfig();
-      })
-    });
-  }
-
-  checkConnection() {
-    let statusField = $('#statusField');
-    let address = config.protocol + "://" + config.server + ':' + config.port;
-    statusField.text('Socket on ' + address + ' disconnected').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
-
-    let socket = require('socket.io-client')(address);
-
-    socket.on('connect', function () {
-      statusField.text('Socket on ' + address + ' connected').removeClass('mdl-color-text--red').addClass('mdl-color-text--green');
-    }).on('connect_failed', function () {
-      statusField.text('Failed to connect socket on ' + address + '').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
-    }).on('disconnect', function () {
-      statusField.text('Disconnected from socket on ' + address + '').removeClass('mdl-color-text--green').addClass('mdl-color-text--red');
-    }).on('event', function (data) {
-      console.log(data);
-    });
-  }
-
-  /**
-   * Add EventListener for all links
-   */
-  linksListener() {
-
-    let links = this.win.window.document.getElementsByTagName('a');
-    let linkNames = Object.getOwnPropertyNames(links);
-    linkNames.forEach(function (el, i) {
-      let link = links[i];
-      link.addEventListener('click', function (ev) {
-        ev.preventDefault();
-        opn(link.getAttribute('href'));
-      });
-    });
-  }
-
-  setVisible() {
-    let win = this.win;
-    win.setShowInTaskbar(true);
-    win.show();
-  }
-
-  setInvisible(time = 500) {
-    let win = this.win;
-    win.setShowInTaskbar(false);
-    win.hide();
-  }
-
-}
+new setupWindow();
+new socketClient();
 
 /**
  * Generate notification window
@@ -405,7 +372,8 @@ class notifyWindowGenerator {
       height: 100,
       show_in_taskbar: true,
       visible_on_all_workspaces: true,
-      frame: false
+      frame: false,
+      toolbar: false
     }, function (win) {
       win.width = 400;
       win.height = 100;
@@ -414,9 +382,11 @@ class notifyWindowGenerator {
       win.show();
 
       win.on('loaded', function () {
-        win.window.setTimeout(function () {
-          win.window.close();
-        }, timeout);
+        if(parseInt(timeout) > 0) {
+          win.window.setTimeout(function () {
+            win.window.close();
+          }, parseInt(timeout));
+        }
         new notifyGenerator(win, icon, title, text);
       });
     });
@@ -428,12 +398,6 @@ class notifyWindowGenerator {
  */
 class notifyGenerator {
 
-  /**
-   * @param window
-   * @param icon
-   * @param title
-   * @param text
-   */
   constructor (window, icon = false, title, text) {
     let domWindow = window.window;
     let console = domWindow.console;
@@ -444,13 +408,13 @@ class notifyGenerator {
       messageBody.find('.icon-place #notify-icon').text(icon);
     }
     messageBody.find('.text-place').html("<h1>" + title + "</h1><p>" + text + "</p>");
+    messageBody.find('a').on('click', function (e) {
+      e.preventDefault();
+      let link = this;
+      nw.Shell.openExternal($(link).attr('href'));
+    })
   }
 }
-
-if(DEV) { new devOptions(); }
-
-new appMenu();
-new setupWindow();
 
 /*
  if(DEV) {
