@@ -419,6 +419,9 @@ class notifyGenerator {
   }
 }
 
+/**
+ * --disable-gpu --force-cpu-draw
+ */
 class wrapperWindow {
   constructor () {
 
