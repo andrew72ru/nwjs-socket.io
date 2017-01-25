@@ -27,7 +27,8 @@
     "width": 900,
     "height": 900,
     "min_width": 400,
-    "min_height": 200
+    "min_height": 200,
+    "title": "NOTIFIER SETTINGS"
   },
   "devDependencies": {
     "nw-dev": "^3.0.1"

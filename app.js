@@ -450,7 +450,7 @@ class notifyWindowGenerator {
       notifyWindowGenerator.open(win);
       win.on('loaded', function () {
 
-        if((typeof existNotificationWindow.window) !== 'undefined') {
+        if((typeof existNotificationWindow.y) !== 'undefined' && (typeof existNotificationWindow.height) !== 'undefined') {
           win.y = existNotificationWindow.y + existNotificationWindow.height + 20;
         }
         existNotificationWindow = win;
@@ -471,7 +471,8 @@ class notifyWindowGenerator {
   }
 
   static close(window) {
-    window.window.close();
+    existNotificationWindow = false;
+    window.close();
   }
 }
 
@@ -493,7 +494,12 @@ class notifyGenerator {
       e.preventDefault();
       let link = this;
       nw.Shell.openExternal($(link).attr('href'));
+    });
+    $("#closeButton").on('click', function () {
+      notifyWindowGenerator.close(window);
     })
+    let body = $('body');
+    if(body.height() > window.height) window.height = (body.height + 5);
   }
 }
 
