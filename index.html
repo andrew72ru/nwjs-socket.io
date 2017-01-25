@@ -14,39 +14,62 @@
     <script src="app.js"></script>
 </head>
 <body class="animated">
-    <div class="mdl-layout mdl-js-layout">
-        <div class="mdl-grid">
+<div class="mdl-layout mdl-js-layout">
+    <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--12-col">
+            <p id="statusField"></p>
+        </div>
+        <div class="mdl-cell mdl-cell--12-col">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" id="config_protocol">
+                <label class="mdl-textfield__label" for="config_protocol">Server Protocol</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" id="config_server">
+                <label class="mdl-textfield__label" for="config_server">Server Address</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" id="config_port">
+                <label class="mdl-textfield__label" for="config_port">Server Port</label>
+            </div>
+        </div>
+
+        <div class="mdl-grid" style="outline: 1px solid #ccc">
             <div class="mdl-cell mdl-cell--12-col">
-                <p id="statusField"></p>
+                <strong>Test notification area</strong>
+            </div>
+            <div class="mdl-cell mdl-cell--6-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="config_check_icon">
+                    <label class="mdl-textfield__label" for="config_check_icon">Check icon</label>
+                </div>
+            </div>
+            <div class="mdl-cell mdl-cell--6-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="config_check_header">
+                    <label class="mdl-textfield__label" for="config_check_header">Check header</label>
+                </div>
             </div>
             <div class="mdl-cell mdl-cell--12-col">
                 <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input class="mdl-textfield__input" type="text" id="serverProrocol">
-                    <label class="mdl-textfield__label" for="serverProrocol">Server Protocol</label>
-                </div>
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input class="mdl-textfield__input" type="text" id="serverAddress">
-                    <label class="mdl-textfield__label" for="serverAddress">Server Address</label>
-                </div>
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input class="mdl-textfield__input" type="text" id="serverPort">
-                    <label class="mdl-textfield__label" for="serverPort">Server Port</label>
+                    <textarea class="mdl-textfield__input" rows="4" type="text" id="config_check_text"></textarea>
+                    <label class="mdl-textfield__label" for="config_check_text">Check text</label>
                 </div>
             </div>
             <div class="mdl-cell mdl-cell--12-col">
-                
                 <button id="notifyCheck" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
                     Check Notification
                 </button>
             </div>
-            <div class="mdl-cell mdl-cell--12-col">
-                <p id="errorPlace"></p>
-            </div>
         </div>
     </div>
-    <div class="mdl-js-snackbar mdl-snackbar" id="snackbar-main">
-        <div class="mdl-snackbar__text"></div>
-        <button class="mdl-snackbar__action" type="button"></button>
+    <div class="mdl-cell mdl-cell--12-col">
+        <p id="errorPlace"></p>
     </div>
+</div>
+<div class="mdl-js-snackbar mdl-snackbar" id="snackbar-main">
+    <div class="mdl-snackbar__text"></div>
+    <button class="mdl-snackbar__action" type="button"></button>
+</div>
 </body>
 </html>
