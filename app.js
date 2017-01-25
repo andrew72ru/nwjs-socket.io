@@ -6,8 +6,6 @@
  */
 'use strict';
 
-const opn = require('opn');
-
 let fs = require('fs');
 let mainWindow = nw.Window.get();
 mainWindow.on('loaded', function () {
