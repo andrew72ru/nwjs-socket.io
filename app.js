@@ -57,18 +57,43 @@ class setupWindow {
   }
 
   setVariables() {
+    let win = this.win;
+    let fieldsValues = setupWindow.setVal(config, 'config');
+    if(DEV) process.stdout.write(`\n\nField names: ` + JSON.stringify(fieldsValues) + `\n\n`);
 
-    let fields = configFactory.fieldList();
-    let fieldNames = Object.getOwnPropertyNames(fields);
-    fieldNames.forEach(function (el) {
-      let target = $("#" + fields[el]);
-      target.val(config[el]).parents('.mdl-textfield').addClass('is-dirty').attr('required', 1);
-      target.on('change', function () {
-        configFactoryClass.saveConfig();
+    if((typeof fieldsValues.forEach) === 'function') {
+
+      fieldsValues.forEach(function (field) {
+
+        win.window.$("#" + field.name)
+          .on('change', function () {
+            if(!win.window.$('.mdl-textfield').hasClass('is-invalid'))
+              configFactoryClass.saveConfig();
+          })
+          .val(field.value).attr('required', 1)
+          .parents('.mdl-textfield').addClass('is-dirty');
       })
-    });
+    }
 
     return this;
+  }
+
+  static setVal(object, prefix = 'config', names = []) {
+    let fields = Object.getOwnPropertyNames(object);
+    fields.forEach(function (item) {
+
+      if((typeof object[item]) === 'string') {
+        let targetname = prefix + '_' + item;
+        if(prefix !== 'config') {
+          targetname = 'config_' + prefix + '_' + item;
+        }
+        names.push({name: targetname, value: object[item]})
+      } else {
+        setupWindow.setVal(object[item], item, names);
+      }
+    });
+
+    return names;
   }
 
   checkConnection() {
@@ -116,16 +141,16 @@ class devOptions {
     this.devInit();
     process.stdout.write('Process on' + `\n`);
     process.on('exit', function () {
-      process.stdout.write('Process exit event' + `\n`);
+      process.stdout.write(`\nProcess exit event\n`);
     });
     process.on('SIGINT', function () {
-      process.stdout.write('Process SIGINT event' + `\n`);
+      process.stdout.write(`\nProcess SIGINT event\n`);
     });
     process.on('SIGTERM', function () {
-      process.stdout.write('Process SIGTERM event' + `\n`);
+      process.stdout.write(`\nProcess SIGTERM event\n`);
     });
     process.on('SIGHUP', function () {
-      process.stdout.write('Process SIGHUP event' + `\n`);
+      process.stdout.write(`\nProcess SIGHUP event\n`);
     });
   }
 
@@ -194,7 +219,7 @@ class configFactory {
       });
       this.config = readedConfig;
       if(doWrite) this.writeFile(readedConfig);
-      if(DEV) process.stdout.write("App confif fields is " + JSON.stringify(this.config) + `\n`);
+      if(DEV) process.stdout.write("App config fields is " + JSON.stringify(this.config) + `\n`);
 
     } else {
       this.writeFile(this.config);
@@ -213,35 +238,53 @@ class configFactory {
       if(err) throw err;
       if(DEV) process.stdout.write('file saved to ' + this.configFile);
     });
-    mainWindow.window.document.querySelector("#snackbar-main").MaterialSnackbar.showSnackbar({
-      message: "Config saved",
-      timeout: 2000
-    });
+
+    if((typeof mainWindow.window.document.querySelector) === 'function') {
+      let snackbar = mainWindow.window.document.querySelector("#snackbar-main");
+      if(snackbar) {
+        mainWindow.window.document.querySelector("#snackbar-main").MaterialSnackbar.showSnackbar({
+          message: "Config saved",
+          timeout: 2000
+        });
+      }
+    }
+    this.config = config;
 
     return true;
   }
 
   saveConfig() {
     let newConfig = config;
-    let fields = configFactory.fieldList();
-    let fieldNames = Object.getOwnPropertyNames(fields);
-    fieldNames.forEach(function (field) {
-      let target = $("#" + fields[field]);
-      newConfig[field] = target.val();
+    let $ = mainWindow.window.$;
+    $('input, select, textarea').each(function (index, object) {
+      let id = $(object).attr('id');
+      let value = $(object).val();
+      let split = id.split('_').splice(1);
+      configFactory.setValues(split, value, false, newConfig);
+
     });
-    this.writeFile(newConfig);
     config = newConfig;
 
     if(DEV) process.stdout.write("New config is " + JSON.stringify(config) + `\n`);
     new setupWindow().checkConnection();
+    this.writeFile(config);
   }
 
-  static fieldList() {
-    return {
-      protocol: 'serverProrocol',
-      server: 'serverAddress',
-      port: 'serverPort'
-    };
+  static setValues(array, val, to = false, object = {}) {
+
+    array.forEach(function (el, i, arr) {
+      if(i+1 === arr.length) {
+        if(!to) {
+          object[el] = val
+        } else {
+          if(object.hasOwnProperty(to)) { object[to][el] = val; } else { object[to] = {}; object[to][el] = val; }
+        }
+      } else {
+        configFactory.setValues(arr.splice(1), val, el, object)
+      }
+    });
+
+    return object;
   }
 
   static defaultConfig() {
@@ -253,7 +296,7 @@ class configFactory {
       check: {
         icon: "notifications_active",
         header: "Hello, world!",
-        text: "Here is a text with <a href=\"https://google.com\">link</a>"
+        text: "Here is a text with <a href=\"https://google.com\">link</a>, which will open in a system default browser"
       }
     };
   }
