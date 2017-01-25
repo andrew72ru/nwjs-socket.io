@@ -6,8 +6,6 @@
  */
 'use strict';
 
-const opn = require('opn');
-
 let fs = require('fs');
 let mainWindow = nw.Window.get();
 mainWindow.on('loaded', function () {
@@ -50,25 +48,50 @@ class setupWindow {
 
   testNotify() {
     $("#notifyCheck").on('click', function () {
-      new notifyWindowGenerator('notifications_active', 'Notification title', `Here is a text with <a href="https://google.com">link</a>`)
+      new notifyWindowGenerator(config.check.icon, config.check.header, config.check.text)
     });
 
     return this;
   }
 
   setVariables() {
+    let win = this.win;
+    let fieldsValues = setupWindow.setVal(config, 'config');
+    if(DEV) process.stdout.write(`\n\nField names: ` + JSON.stringify(fieldsValues) + `\n\n`);
 
-    let fields = configFactory.fieldList();
-    let fieldNames = Object.getOwnPropertyNames(fields);
-    fieldNames.forEach(function (el) {
-      let target = $("#" + fields[el]);
-      target.val(config[el]).parents('.mdl-textfield').addClass('is-dirty').attr('required', 1);
-      target.on('change', function () {
-        configFactoryClass.saveConfig();
+    if((typeof fieldsValues.forEach) === 'function') {
+
+      fieldsValues.forEach(function (field) {
+
+        win.window.$("#" + field.name)
+          .on('change', function () {
+            if(!win.window.$('.mdl-textfield').hasClass('is-invalid'))
+              configFactoryClass.saveConfig();
+          })
+          .val(field.value).attr('required', 1)
+          .parents('.mdl-textfield').addClass('is-dirty');
       })
-    });
+    }
 
     return this;
+  }
+
+  static setVal(object, prefix = 'config', names = []) {
+    let fields = Object.getOwnPropertyNames(object);
+    fields.forEach(function (item) {
+
+      if((typeof object[item]) === 'string') {
+        let targetname = prefix + '_' + item;
+        if(prefix !== 'config') {
+          targetname = 'config_' + prefix + '_' + item;
+        }
+        names.push({name: targetname, value: object[item]})
+      } else {
+        setupWindow.setVal(object[item], item, names);
+      }
+    });
+
+    return names;
   }
 
   checkConnection() {
@@ -116,16 +139,16 @@ class devOptions {
     this.devInit();
     process.stdout.write('Process on' + `\n`);
     process.on('exit', function () {
-      process.stdout.write('Process exit event' + `\n`);
+      process.stdout.write(`\nProcess exit event\n`);
     });
     process.on('SIGINT', function () {
-      process.stdout.write('Process SIGINT event' + `\n`);
+      process.stdout.write(`\nProcess SIGINT event\n`);
     });
     process.on('SIGTERM', function () {
-      process.stdout.write('Process SIGTERM event' + `\n`);
+      process.stdout.write(`\nProcess SIGTERM event\n`);
     });
     process.on('SIGHUP', function () {
-      process.stdout.write('Process SIGHUP event' + `\n`);
+      process.stdout.write(`\nProcess SIGHUP event\n`);
     });
   }
 
@@ -182,7 +205,20 @@ class configFactory {
     let path = require('path');
     this.configFile = nw.App.dataPath + path.sep + file;
     if(fs.existsSync(this.configFile)) {
-      this.config = require(this.configFile);
+      let doWrite = false;
+      let readedConfig = require(this.configFile);
+      let defaultConfig = this.config;
+      let configFields = Object.getOwnPropertyNames(defaultConfig);
+      configFields.forEach(function (field) {
+        if((typeof readedConfig[field]) === 'undefined') {
+          readedConfig[field] = defaultConfig[field];
+          doWrite = true;
+        }
+      });
+      this.config = readedConfig;
+      if(doWrite) this.writeFile(readedConfig);
+      if(DEV) process.stdout.write("App config fields is " + JSON.stringify(this.config) + `\n`);
+
     } else {
       this.writeFile(this.config);
       new setupWindow().setVisible();
@@ -192,6 +228,8 @@ class configFactory {
   }
 
   writeFile(config = {}) {
+    if(Object.getOwnPropertyNames(config).length <= 0) config = this.config;
+
     let fs = require('fs');
     let file = this.configFile;
     fs.writeFileSync(this.configFile, JSON.stringify(config), (err) => {
@@ -199,29 +237,52 @@ class configFactory {
       if(DEV) process.stdout.write('file saved to ' + this.configFile);
     });
 
+    if((typeof mainWindow.window.document.querySelector) === 'function') {
+      let snackbar = mainWindow.window.document.querySelector("#snackbar-main");
+      if(snackbar) {
+        mainWindow.window.document.querySelector("#snackbar-main").MaterialSnackbar.showSnackbar({
+          message: "Config saved",
+          timeout: 2000
+        });
+      }
+    }
+    this.config = config;
+
     return true;
   }
 
   saveConfig() {
-    let newConfig = {};
-    let fields = configFactory.fieldList();
-    let fieldNames = Object.getOwnPropertyNames(fields);
-    fieldNames.forEach(function (field) {
-      let target = $("#" + fields[field]);
-      newConfig[field] = target.val();
+    let newConfig = config;
+    let $ = mainWindow.window.$;
+    $('input, select, textarea').each(function (index, object) {
+      let id = $(object).attr('id');
+      let value = $(object).val();
+      let split = id.split('_').splice(1);
+      configFactory.setValues(split, value, false, newConfig);
+
     });
-    this.writeFile(newConfig);
     config = newConfig;
 
+    if(DEV) process.stdout.write("New config is " + JSON.stringify(config) + `\n`);
     new setupWindow().checkConnection();
+    this.writeFile(config);
   }
 
-  static fieldList() {
-    return {
-      protocol: 'serverProrocol',
-      server: 'serverAddress',
-      port: 'serverPort'
-    };
+  static setValues(array, val, to = false, object = {}) {
+
+    array.forEach(function (el, i, arr) {
+      if(i+1 === arr.length) {
+        if(!to) {
+          object[el] = val
+        } else {
+          if(object.hasOwnProperty(to)) { object[to][el] = val; } else { object[to] = {}; object[to][el] = val; }
+        }
+      } else {
+        configFactory.setValues(arr.splice(1), val, el, object)
+      }
+    });
+
+    return object;
   }
 
   static defaultConfig() {
@@ -229,6 +290,12 @@ class configFactory {
       protocol: 'http',
       server: 'localhost',
       port: '8080',
+      events: ["marker"],
+      check: {
+        icon: "notifications_active",
+        header: "Hello, world!",
+        text: "Here is a text with <a href=\"https://google.com\">link</a>, which will open in a system default browser"
+      }
     };
   }
 }
@@ -337,13 +404,15 @@ class socketClient {
    * @param socket
    */
   receive(socket) {
-    socket.on('marker', function (data) {
-      if(DEV) {
-        let d = new Date();
-        process.stdout.write('New message received on ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ": " + JSON.stringify(data) + `\n`);
-      }
-      new notifyWindowGenerator(data.icon || false, data.header || "Notify from " + config.server, data.message || "(empty)", data.timeout || 15000)
-    });
+    config.events.forEach(function (el) {
+      socket.on(el, function (data) {
+        if(DEV) {
+          let d = new Date();
+          process.stdout.write('New message received on ' + el + ' in ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ": " + JSON.stringify(data) + `\n`);
+          new notifyWindowGenerator(data.icon || false, data.header || "Notify from " + config.server, data.message || "(empty)", data.timeout || 15000)
+        }
+      });
+    })
   }
 }
 
@@ -358,7 +427,7 @@ let existNotificationWindow = false;
  */
 class notifyWindowGenerator {
 
-  constructor (icon = false, title = 'Notify Title', text = 'Notification text', timeout = 15000) {
+  constructor (icon = config.check.icon, title = config.check.header, text = config.check.text, timeout = 15000) {
 
     nw.Screen.Init();
     nw.Window.open('notification.html', {
@@ -379,7 +448,7 @@ class notifyWindowGenerator {
       notifyWindowGenerator.open(win);
       win.on('loaded', function () {
 
-        if((typeof existNotificationWindow.window) !== 'undefined') {
+        if((typeof existNotificationWindow.y) !== 'undefined' && (typeof existNotificationWindow.height) !== 'undefined') {
           win.y = existNotificationWindow.y + existNotificationWindow.height + 20;
         }
         existNotificationWindow = win;
@@ -400,7 +469,8 @@ class notifyWindowGenerator {
   }
 
   static close(window) {
-    window.window.close();
+    existNotificationWindow = false;
+    window.close();
   }
 }
 
@@ -422,7 +492,12 @@ class notifyGenerator {
       e.preventDefault();
       let link = this;
       nw.Shell.openExternal($(link).attr('href'));
+    });
+    $("#closeButton").on('click', function () {
+      notifyWindowGenerator.close(window);
     })
+    let body = $('body');
+    if(body.height() > window.height) window.height = (body.height + 5);
   }
 }
 

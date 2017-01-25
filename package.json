@@ -8,11 +8,9 @@
     "less": "^2.7.2",
     "material-design-icons": "^3.0.1",
     "material-design-lite": "^1.3.0",
-    "opn": "^4.0.2",
     "socket.io": "^1.7.2",
     "socket.io-client": "^1.7.2",
-    "socketio-wildcard": "^0.3.0",
-    "winston": "^2.3.0"
+    "socketio-wildcard": "^0.3.0"
   },
   "main": "index.html",
   "window": {
@@ -24,10 +22,15 @@
     "always_on_top": false,
     "position": null,
     "frame": true,
-    "width": 800,
-    "height": 900
+    "width": 900,
+    "height": 900,
+    "min_width": 400,
+    "min_height": 200,
+    "title": "NOTIFIER SETTINGS"
   },
   "devDependencies": {
+    "nw-builder": "^3.1.3",
     "nw-dev": "^3.0.1"
-  }
+  },
+  "repository": "github:andrew72ru/nwjs-socket.io"
 }
