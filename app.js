@@ -50,7 +50,7 @@ class setupWindow {
 
   testNotify() {
     $("#notifyCheck").on('click', function () {
-      new notifyWindowGenerator('notifications_active', 'Notification title', `Here is a text with <a href="https://google.com">link</a>`)
+      new notifyWindowGenerator(config.check.icon, config.check.header, config.check.text)
     });
 
     return this;
@@ -182,7 +182,20 @@ class configFactory {
     let path = require('path');
     this.configFile = nw.App.dataPath + path.sep + file;
     if(fs.existsSync(this.configFile)) {
-      this.config = require(this.configFile);
+      let doWrite = false;
+      let readedConfig = require(this.configFile);
+      let defaultConfig = this.config;
+      let configFields = Object.getOwnPropertyNames(defaultConfig);
+      configFields.forEach(function (field) {
+        if((typeof readedConfig[field]) === 'undefined') {
+          readedConfig[field] = defaultConfig[field];
+          doWrite = true;
+        }
+      });
+      this.config = readedConfig;
+      if(doWrite) this.writeFile(readedConfig);
+      if(DEV) process.stdout.write("App confif fields is " + JSON.stringify(this.config) + `\n`);
+
     } else {
       this.writeFile(this.config);
       new setupWindow().setVisible();
@@ -192,6 +205,8 @@ class configFactory {
   }
 
   writeFile(config = {}) {
+    if(Object.getOwnPropertyNames(config).length <= 0) config = this.config;
+
     let fs = require('fs');
     let file = this.configFile;
     fs.writeFileSync(this.configFile, JSON.stringify(config), (err) => {
@@ -203,7 +218,7 @@ class configFactory {
   }
 
   saveConfig() {
-    let newConfig = {};
+    let newConfig = config;
     let fields = configFactory.fieldList();
     let fieldNames = Object.getOwnPropertyNames(fields);
     fieldNames.forEach(function (field) {
@@ -213,6 +228,7 @@ class configFactory {
     this.writeFile(newConfig);
     config = newConfig;
 
+    if(DEV) process.stdout.write("New config is " + JSON.stringify(config) + `\n`);
     new setupWindow().checkConnection();
   }
 
@@ -229,6 +245,12 @@ class configFactory {
       protocol: 'http',
       server: 'localhost',
       port: '8080',
+      events: ["marker"],
+      check: {
+        icon: "notifications_active",
+        header: "Hello, world!",
+        text: "Here is a text with <a href=\"https://google.com\">link</a>"
+      }
     };
   }
 }
@@ -337,13 +359,15 @@ class socketClient {
    * @param socket
    */
   receive(socket) {
-    socket.on('marker', function (data) {
-      if(DEV) {
-        let d = new Date();
-        process.stdout.write('New message received on ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ": " + JSON.stringify(data) + `\n`);
-      }
-      new notifyWindowGenerator(data.icon || false, data.header || "Notify from " + config.server, data.message || "(empty)", data.timeout || 15000)
-    });
+    config.events.forEach(function (el) {
+      socket.on(el, function (data) {
+        if(DEV) {
+          let d = new Date();
+          process.stdout.write('New message received on ' + el + ' in ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ": " + JSON.stringify(data) + `\n`);
+          new notifyWindowGenerator(data.icon || false, data.header || "Notify from " + config.server, data.message || "(empty)", data.timeout || 15000)
+        }
+      });
+    })
   }
 }
 
@@ -358,7 +382,7 @@ let existNotificationWindow = false;
  */
 class notifyWindowGenerator {
 
-  constructor (icon = false, title = 'Notify Title', text = 'Notification text', timeout = 15000) {
+  constructor (icon = config.check.icon, title = config.check.header, text = config.check.text, timeout = 15000) {
 
     nw.Screen.Init();
     nw.Window.open('notification.html', {
