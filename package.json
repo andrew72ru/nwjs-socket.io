@@ -24,8 +24,10 @@
     "always_on_top": false,
     "position": null,
     "frame": true,
-    "width": 800,
-    "height": 900
+    "width": 900,
+    "height": 900,
+    "min_width": 400,
+    "min_height": 200
   },
   "devDependencies": {
     "nw-dev": "^3.0.1"
