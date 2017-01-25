@@ -213,6 +213,10 @@ class configFactory {
       if(err) throw err;
       if(DEV) process.stdout.write('file saved to ' + this.configFile);
     });
+    mainWindow.window.document.querySelector("#snackbar-main").MaterialSnackbar.showSnackbar({
+      message: "Config saved",
+      timeout: 2000
+    });
 
     return true;
   }
