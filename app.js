@@ -10,6 +10,9 @@ const opn = require('opn');
 
 let fs = require('fs');
 let mainWindow = nw.Window.get();
+mainWindow.on('loaded', function () {
+  new setupWindow().setVariables().checkConnection().testNotify();
+})
 
 let DEV = false;
 if((typeof nw.App.fullArgv.forEach) === 'function') {
@@ -28,10 +31,6 @@ class setupWindow {
 
     win.on('close', function () {
       selfClass.setInvisible();
-    }).on('loaded', function () {
-      selfClass.checkConnection();
-      selfClass.setVariables();
-      selfClass.testNotify();
     });
     this.windowPosition();
 
@@ -53,6 +52,8 @@ class setupWindow {
     $("#notifyCheck").on('click', function () {
       new notifyWindowGenerator('notifications_active', 'Notification title', `Here is a text with <a href="https://google.com">link</a>`)
     });
+
+    return this;
   }
 
   setVariables() {
@@ -66,6 +67,8 @@ class setupWindow {
         configFactoryClass.saveConfig();
       })
     });
+
+    return this;
   }
 
   checkConnection() {
@@ -84,18 +87,24 @@ class setupWindow {
     }).on('event', function (data) {
       console.log(data);
     });
+
+    return this;
   }
 
   setVisible() {
     let win = this.win;
     win.setShowInTaskbar(true);
     win.show();
+
+    return this;
   }
 
   setInvisible() {
     let win = this.win;
     win.setShowInTaskbar(false);
     win.hide();
+
+    return this;
   }
 
 }
@@ -168,6 +177,7 @@ class devOptions {
 class configFactory {
 
   constructor (file = 'config.json') {
+
     this.config = configFactory.defaultConfig();
     let path = require('path');
     this.configFile = nw.App.dataPath + path.sep + file;
@@ -186,7 +196,7 @@ class configFactory {
     let file = this.configFile;
     fs.writeFileSync(this.configFile, JSON.stringify(config), (err) => {
       if(err) throw err;
-      if(DEV) console.log('file saved to ' + this.configFile);
+      if(DEV) process.stdout.write('file saved to ' + this.configFile);
     });
 
     return true;
@@ -303,7 +313,8 @@ class socketClient {
     patch(socket);
 
     socket.on('*', function (e) {
-      process.stdout.write('* event JSON: ' + JSON.stringify(e) + `\n`);
+      if(DEV) process.stdout.write('Wildcard event JSON: ' + JSON.stringify(e) + `\n`);
+
     }).on('connect', function () {
       if(DEV) process.stdout.write(`Socket connected to ` + address + `\n`);
       systemTray.icon = 'img/ic_notifications_black_24dp/web/ic_notifications_black_24dp_1x.png'
@@ -338,7 +349,6 @@ class socketClient {
 
 if(DEV) { new devOptions(); }
 
-new setupWindow();
 new socketClient();
 
 let existNotificationWindow = false;
@@ -361,15 +371,12 @@ class notifyWindowGenerator {
       visible_on_all_workspaces: true,
       transparent: false,
       frame: false,
+      x: nw.Screen.screens[0].work_area.width - 400,
+      y: 60,
+      always_on_top: true
     }, function (win) {
-      win.width = 400;
-      win.height = 100;
-      win.x = nw.Screen.screens[0].work_area.width - win.width;
-      win.y = nw.Screen.screens[0].work_area.x + nw.Screen.screens[0].work_area.y;
-      win.setAlwaysOnTop(true);
 
       notifyWindowGenerator.open(win);
-
       win.on('loaded', function () {
 
         if((typeof existNotificationWindow.window) !== 'undefined') {
